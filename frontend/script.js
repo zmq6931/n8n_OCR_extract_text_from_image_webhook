@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultContainer = document.getElementById('resultContainer');
     const resultContent = document.getElementById('resultContent');
     const loading = document.getElementById('loading');
+    const screenshotBtn = document.getElementById('screenshotBtn');
 
     // Handle drag and drop events
     dropZone.addEventListener('dragover', (e) => {
@@ -105,6 +106,54 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             loading.style.display = 'none';
             processBtn.disabled = false;
+        }
+    });
+
+    // Add screenshot functionality
+    screenshotBtn.addEventListener('click', async () => {
+        try {
+            const stream = await navigator.mediaDevices.getDisplayMedia({
+                video: {
+                    cursor: 'always'
+                },
+                audio: false
+            });
+
+            const video = document.createElement('video');
+            video.srcObject = stream;
+            
+            video.onloadedmetadata = () => {
+                video.play();
+                
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                
+                // Convert canvas to blob
+                canvas.toBlob((blob) => {
+                    // Create a File object from the blob
+                    const file = new File([blob], 'screenshot.png', { type: 'image/png' });
+                    
+                    // Create a new FileList-like object
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    
+                    // Update the file input
+                    fileInput.files = dataTransfer.files;
+                    
+                    // Handle the file
+                    handleFile(file);
+                    
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                }, 'image/png');
+            };
+        } catch (error) {
+            console.error('Error capturing screenshot:', error);
+            alert('Failed to capture screenshot. Please make sure you have granted screen capture permissions.');
         }
     });
 }); 
