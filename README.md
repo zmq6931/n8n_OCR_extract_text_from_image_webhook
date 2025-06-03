@@ -1,0 +1,1 @@
+# n8n_OCR_extract_text_from_image_webhook
